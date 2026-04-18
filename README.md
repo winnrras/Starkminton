@@ -4,10 +4,10 @@ Real-time badminton smash analytics dashboard for the hackathon. Connects to an 
 
 ## Team
 
-- **Babega** — ESP32 + MPU6050 + piezo signal processing → hit coordinates
+- **Babega** — Piezo signal processing → hit coordinates and localization
 - **Barrack** — MEMS microphone + frequency analysis → sweet-spot detection
-- **Aubreyasta** — Webcam pose estimation for smash form (stretch goal)
-- **[You]** — Web dashboard (this repo)
+- **Aubreyasta** — ESP32 + MPU6050 → connection to web dashboard
+- **Winner** — Web dashboard (this repo)
 
 ## Features
 
