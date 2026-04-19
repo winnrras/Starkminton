@@ -1,20 +1,36 @@
 "use client";
 
 import { ConnectionPanel } from "@/components/ConnectionPanel";
+import { ExportSession } from "@/components/ExportSession";
 import { FullscreenSessionBrowser } from "@/components/FullscreenSessionBrowser";
 import { FullscreenableCard } from "@/components/FullscreenableCard";
 import { HitHistory } from "@/components/HitHistory";
 import { LatestHitCard } from "@/components/LatestHitCard";
 import { RacketHeatmap } from "@/components/RacketHeatmap";
+import { SessionComparison } from "@/components/SessionComparison";
 import { SessionControls } from "@/components/SessionControls";
 import { SessionStats } from "@/components/SessionStats";
 import { SessionTimer } from "@/components/SessionTimer";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useAppStore } from "@/lib/store";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const hits = useAppStore((s) => s.hits);
   const latestHitId = hits.length > 0 ? hits[hits.length - 1].id : null;
+  const rehydrateCompare = useAppStore((s) => s.rehydrateCompare);
+  const setCompareMode = useAppStore((s) => s.setCompareMode);
+
+  const [heatmapFullscreen, setHeatmapFullscreen] = useState(false);
+
+  useEffect(() => {
+    rehydrateCompare();
+  }, [rehydrateCompare]);
+
+  function openCompareInFullscreen() {
+    setCompareMode(true);
+    setHeatmapFullscreen(true);
+  }
 
   return (
     <>
@@ -41,11 +57,13 @@ export default function Home() {
         </header>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left — hero racket heatmap; fullscreen opens the session browser */}
+          {/* Left — hero racket heatmap */}
           <section className="order-2 lg:order-1 lg:col-span-7">
             <FullscreenableCard
               fullscreenTitle="Strike map"
               fullscreenContent={<FullscreenSessionBrowser />}
+              isOpen={heatmapFullscreen}
+              onOpenChange={setHeatmapFullscreen}
             >
               <div className="rounded-3xl border border-ink-700 bg-gradient-to-b from-ink-900 to-ink-950 p-6 lg:p-10">
                 <div className="flex items-baseline justify-between pr-10">
@@ -63,6 +81,10 @@ export default function Home() {
                 <div className="mx-auto mt-4 aspect-[5/7] w-full max-w-[460px]">
                   <RacketHeatmap hits={hits} latestHitId={latestHitId} />
                 </div>
+
+                <div className="mt-6 flex justify-center border-t border-ink-800 pt-5">
+                  <ExportSession />
+                </div>
               </div>
             </FullscreenableCard>
           </section>
@@ -76,6 +98,7 @@ export default function Home() {
             <FullscreenableCard fullscreenTitle="Session stats">
               <SessionStats />
             </FullscreenableCard>
+            <SessionComparison onOpenFullscreen={openCompareInFullscreen} />
           </section>
 
           {/* Full-width hit history */}

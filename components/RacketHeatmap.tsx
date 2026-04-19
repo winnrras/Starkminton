@@ -6,6 +6,12 @@ import { useMemo } from "react";
 
 type Orientation = "vertical" | "horizontal";
 
+export interface CompareSet {
+  hits: HitData[];
+  color: string;
+  label?: string;
+}
+
 interface RacketHeatmapProps {
   hits: HitData[];
   latestHitId: string | null;
@@ -13,6 +19,8 @@ interface RacketHeatmapProps {
   headOnly?: boolean;
   /** "vertical" = default, head at top. "horizontal" = head on left, shaft to the right. */
   orientation?: Orientation;
+  /** If provided, renders multiple colored hit sets instead of the default `hits`. */
+  compareSets?: CompareSet[];
 }
 
 export function RacketHeatmap({
@@ -20,6 +28,7 @@ export function RacketHeatmap({
   latestHitId,
   headOnly = false,
   orientation = "vertical",
+  compareSets,
 }: RacketHeatmapProps) {
   if (orientation === "horizontal") {
     return (
@@ -27,6 +36,7 @@ export function RacketHeatmap({
         hits={hits}
         latestHitId={latestHitId}
         headOnly={headOnly}
+        compareSets={compareSets}
       />
     );
   }
@@ -35,6 +45,7 @@ export function RacketHeatmap({
       hits={hits}
       latestHitId={latestHitId}
       headOnly={headOnly}
+      compareSets={compareSets}
     />
   );
 }
@@ -45,10 +56,12 @@ function RacketVertical({
   hits,
   latestHitId,
   headOnly,
+  compareSets,
 }: {
   hits: HitData[];
   latestHitId: string | null;
   headOnly: boolean;
+  compareSets?: CompareSet[];
 }) {
   const headCx = 200;
   const headCy = 170;
@@ -208,16 +221,34 @@ function RacketVertical({
           />
         </g>
 
-        {/* Hits */}
-        <HitDots
-          hits={hits}
-          latestHitId={latestHitId}
-          mapCoord={mapCoord}
-          clipId={`stringBedClip-${suffix}`}
-          baseRadius={headOnly ? 6 : 4}
-          latestRadius={headOnly ? 8 : 5.5}
-          pulseMaxR={headOnly ? 48 : 32}
-        />
+        {/* Hits — either single session or compare overlay */}
+        {compareSets && compareSets.length > 0 ? (
+          compareSets.map((set, idx) => (
+            <HitDots
+              key={idx}
+              hits={set.hits}
+              latestHitId={null}
+              mapCoord={mapCoord}
+              clipId={`stringBedClip-${suffix}`}
+              baseRadius={headOnly ? 5 : 3.5}
+              latestRadius={headOnly ? 7 : 5}
+              pulseMaxR={0}
+              fillColor={set.color}
+              strokeColor={set.color}
+              dotOpacity={0.7}
+            />
+          ))
+        ) : (
+          <HitDots
+            hits={hits}
+            latestHitId={latestHitId}
+            mapCoord={mapCoord}
+            clipId={`stringBedClip-${suffix}`}
+            baseRadius={headOnly ? 6 : 4}
+            latestRadius={headOnly ? 8 : 5.5}
+            pulseMaxR={headOnly ? 48 : 32}
+          />
+        )}
       </svg>
     </div>
   );
@@ -229,10 +260,12 @@ function RacketHorizontal({
   hits,
   latestHitId,
   headOnly,
+  compareSets,
 }: {
   hits: HitData[];
   latestHitId: string | null;
   headOnly: boolean;
+  compareSets?: CompareSet[];
 }) {
   // Head dominates the left side — bigger, closer to the edge
   const headCx = 310;
@@ -405,16 +438,34 @@ function RacketHorizontal({
           />
         </g>
 
-        {/* Hits */}
-        <HitDots
-          hits={hits}
-          latestHitId={latestHitId}
-          mapCoord={mapCoord}
-          clipId={`stringBedClip-${suffix}`}
-          baseRadius={9}
-          latestRadius={12}
-          pulseMaxR={70}
-        />
+        {/* Hits — either single session or compare overlay */}
+        {compareSets && compareSets.length > 0 ? (
+          compareSets.map((set, idx) => (
+            <HitDots
+              key={idx}
+              hits={set.hits}
+              latestHitId={null}
+              mapCoord={mapCoord}
+              clipId={`stringBedClip-${suffix}`}
+              baseRadius={8}
+              latestRadius={10}
+              pulseMaxR={0}
+              fillColor={set.color}
+              strokeColor={set.color}
+              dotOpacity={0.7}
+            />
+          ))
+        ) : (
+          <HitDots
+            hits={hits}
+            latestHitId={latestHitId}
+            mapCoord={mapCoord}
+            clipId={`stringBedClip-${suffix}`}
+            baseRadius={9}
+            latestRadius={12}
+            pulseMaxR={70}
+          />
+        )}
       </svg>
     </div>
   );
@@ -478,6 +529,9 @@ function HitDots({
   baseRadius,
   latestRadius,
   pulseMaxR,
+  fillColor,
+  strokeColor,
+  dotOpacity,
 }: {
   hits: HitData[];
   latestHitId: string | null;
@@ -486,6 +540,10 @@ function HitDots({
   baseRadius: number;
   latestRadius: number;
   pulseMaxR: number;
+  /** Override fill color (for compare mode); sweet-spot distinction is dropped when set */
+  fillColor?: string;
+  strokeColor?: string;
+  dotOpacity?: number;
 }) {
   return (
     <g clipPath={`url(#${clipId})`}>
@@ -493,11 +551,27 @@ function HitDots({
         const { cx, cy } = mapCoord(hit.x, hit.y);
         const isLatest = hit.id === latestHitId;
         const age = hits.length - 1 - i;
-        const opacity = Math.max(0.15, 1 - age * 0.04);
+        const computedOpacity =
+          dotOpacity ?? Math.max(0.15, 1 - age * 0.04);
+
+        // In compare mode (fillColor provided) every dot is filled with the set color.
+        // Otherwise use the normal sweet/off-spot distinction.
+        const useOverride = !!fillColor;
+        const fill = useOverride
+          ? fillColor
+          : hit.sweet
+          ? "#d9ff3f"
+          : "transparent";
+        const stroke = useOverride
+          ? strokeColor ?? fillColor!
+          : hit.sweet
+          ? "#d9ff3f"
+          : "#f5f5f4";
+        const strokeWidth = useOverride ? 0 : hit.sweet ? 0 : 1.5;
 
         return (
           <g key={hit.id}>
-            {isLatest && (
+            {isLatest && pulseMaxR > 0 && (
               <motion.circle
                 cx={cx}
                 cy={cy}
@@ -514,12 +588,12 @@ function HitDots({
               cx={cx}
               cy={cy}
               r={isLatest ? latestRadius : baseRadius}
-              fill={hit.sweet ? "#d9ff3f" : "transparent"}
-              stroke={hit.sweet ? "#d9ff3f" : "#f5f5f4"}
-              strokeWidth={hit.sweet ? 0 : 1.5}
-              opacity={opacity}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              opacity={computedOpacity}
               initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity }}
+              animate={{ scale: 1, opacity: computedOpacity }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             />
           </g>
