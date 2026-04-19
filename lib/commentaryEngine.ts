@@ -63,7 +63,7 @@ export function createCommentaryEngine(): CommentaryEngine {
       // Convert each base64 MP3 into a blob URL the <audio> element can use.
       clips = (data.clips || []).map((c: any) => {
         const bytes = base64ToBytes(c.audio);
-        const blob = new Blob([bytes], { type: "audio/mpeg" });
+        const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "audio/mpeg" });
         const url = URL.createObjectURL(blob);
         return { tag: c.tag, text: c.text, audioBlobUrl: url };
       });
