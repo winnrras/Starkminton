@@ -1,5 +1,6 @@
 "use client";
 
+import { AICoach } from "@/components/AICoach";
 import { ConnectionPanel } from "@/components/ConnectionPanel";
 import { ExportSession } from "@/components/ExportSession";
 import { FullscreenSessionBrowser } from "@/components/FullscreenSessionBrowser";
@@ -99,6 +100,7 @@ export default function Home() {
               <SessionStats />
             </FullscreenableCard>
             <SessionComparison onOpenFullscreen={openCompareInFullscreen} />
+            <AICoach />
           </section>
 
           {/* Full-width hit history */}

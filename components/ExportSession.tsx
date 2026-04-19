@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
+import { buildSessionCsv } from "@/lib/csv";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { HitData } from "@/lib/types";
@@ -69,7 +70,14 @@ export function ExportSession() {
         deviceTimestamp: h.deviceTimestamp ?? undefined,
         recordedAt: new Date(h.recordedAt).getTime(),
       }));
-      const csv = buildCsv(data.session, hits);
+      const csv = buildSessionCsv(
+        {
+          id: data.session.id,
+          startedAt: data.session.startedAt,
+          endedAt: data.session.endedAt,
+        },
+        hits
+      );
       const filename = buildFilename(data.session);
       triggerDownload(csv, filename);
     } catch (e) {
@@ -212,64 +220,6 @@ function formatDuration(startedAt: number, endedAt: number | null): string {
   const mins = Math.floor(ms / 60000);
   const secs = Math.floor((ms % 60000) / 1000);
   if (mins === 0) return `${secs}s`;
-  return `${mins}m ${secs}s`;
-}
-
-function buildCsv(session: any, hits: HitData[]): string {
-  const startedAt = new Date(session.startedAt);
-  const endedAt = session.endedAt ? new Date(session.endedAt) : null;
-  const durationMs = endedAt
-    ? endedAt.getTime() - startedAt.getTime()
-    : null;
-  const hitCount = hits.length;
-  const sweetCount = hits.filter((h) => h.sweet).length;
-  const sweetPct =
-    hitCount > 0 ? Math.round((sweetCount / hitCount) * 100) : 0;
-  const maxForce = hits.reduce((m, h) => Math.max(m, h.force), 0);
-  const avgForce =
-    hitCount > 0 ? hits.reduce((s, h) => s + h.force, 0) / hitCount : 0;
-
-  const meta = [
-    `# Starkminton session export`,
-    `# Session ID: ${session.id}`,
-    `# Started: ${startedAt.toISOString()}`,
-    `# Ended: ${endedAt ? endedAt.toISOString() : "(not ended)"}`,
-    `# Duration: ${durationMs !== null ? formatDurationForCsv(durationMs) : "—"}`,
-    `# Total hits: ${hitCount}`,
-    `# Sweet-spot hits: ${sweetCount} (${sweetPct}%)`,
-    `# Max force: ${Math.round(maxForce)}`,
-    `# Avg force: ${Math.round(avgForce)}`,
-    `#`,
-  ];
-
-  const header = [
-    "hit_number",
-    "recorded_at_iso",
-    "device_timestamp_ms",
-    "x_normalized",
-    "y_normalized",
-    "force",
-    "sweet_spot",
-  ].join(",");
-
-  const rows = hits.map((h, i) => {
-    return [
-      i + 1,
-      new Date(h.recordedAt).toISOString(),
-      h.deviceTimestamp ?? "",
-      h.x.toFixed(4),
-      h.y.toFixed(4),
-      h.force.toFixed(2),
-      h.sweet === null ? "" : h.sweet ? "true" : "false",
-    ].join(",");
-  });
-
-  return [...meta, header, ...rows].join("\n");
-}
-
-function formatDurationForCsv(ms: number): string {
-  const mins = Math.floor(ms / 60000);
-  const secs = Math.floor((ms % 60000) / 1000);
   return `${mins}m ${secs}s`;
 }
 
