@@ -45,6 +45,7 @@ const config: Config = {
   },
   darkMode: "class",
   plugins: [
+    // @ts-expect-error - heroui plugin type mismatch with Tailwind
     heroui({
       themes: {
         dark: {
