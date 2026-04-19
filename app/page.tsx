@@ -1,6 +1,7 @@
 "use client";
 
 import { ConnectionPanel } from "@/components/ConnectionPanel";
+import { FullscreenSessionBrowser } from "@/components/FullscreenSessionBrowser";
 import { FullscreenableCard } from "@/components/FullscreenableCard";
 import { HitHistory } from "@/components/HitHistory";
 import { LatestHitCard } from "@/components/LatestHitCard";
@@ -19,7 +20,6 @@ export default function Home() {
     <>
       <SplashScreen />
       <main className="min-h-screen px-6 py-8 lg:px-12 lg:py-10">
-        {/* Header */}
         <header className="mb-10 flex flex-wrap items-start justify-between gap-6">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-accent">
@@ -41,19 +41,11 @@ export default function Home() {
         </header>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left — hero racket heatmap (fullscreenable, shows head-only when open) */}
+          {/* Left — hero racket heatmap; fullscreen opens the session browser */}
           <section className="order-2 lg:order-1 lg:col-span-7">
             <FullscreenableCard
               fullscreenTitle="Strike map"
-              fullscreenContent={
-                <div className="mx-auto h-full max-w-[1000px]">
-                  <RacketHeatmap
-                    hits={hits}
-                    latestHitId={latestHitId}
-                    headOnly
-                  />
-                </div>
-              }
+              fullscreenContent={<FullscreenSessionBrowser />}
             >
               <div className="rounded-3xl border border-ink-700 bg-gradient-to-b from-ink-900 to-ink-950 p-6 lg:p-10">
                 <div className="flex items-baseline justify-between pr-10">
@@ -116,7 +108,13 @@ function Legend() {
   );
 }
 
-function LegendDot({ label, filled = false }: { label: string; filled?: boolean }) {
+function LegendDot({
+  label,
+  filled = false,
+}: {
+  label: string;
+  filled?: boolean;
+}) {
   return (
     <div className="flex items-center gap-1.5">
       <span
