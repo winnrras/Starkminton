@@ -3,6 +3,7 @@
 import { useAppStore } from "@/lib/store";
 import { createBluetoothClient } from "@/lib/bluetooth";
 import { createMockGenerator } from "@/lib/mock";
+import { VoiceCommentary } from "@/components/VoiceCommentary";
 import { Button, Switch } from "@heroui/react";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -151,6 +152,9 @@ export function ConnectionPanel() {
           }}
         />
       </div>
+
+      {/* AI voice commentary */}
+      <VoiceCommentary />
 
       {/* Error display */}
       {connection.error && (
