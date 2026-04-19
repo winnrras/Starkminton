@@ -67,6 +67,12 @@ export function ConnectionPanel() {
       const { deviceName } = await btClientRef.current.connect();
       setDeviceName(deviceName);
       setConnectionStatus("connected");
+      // Play success chime
+      try {
+        const audio = new Audio("/sounds/bluetoothdevice.mp3");
+        audio.volume = 0.5;
+        audio.play().catch(() => {});
+      } catch {}
       if (!activeSession) startSession();
     } catch (e: any) {
       setConnectionStatus("error", e.message || "Connection failed");
