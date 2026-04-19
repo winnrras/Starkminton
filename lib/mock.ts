@@ -37,9 +37,11 @@ export function createMockGenerator(
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     const sweet = dist < 0.12 && Math.random() > 0.2;
+    // Force values use the 0-4095 raw ADC range the real firmware sends,
+    // so switching between mock and real hardware produces consistent numbers.
     const force = sweet
-      ? 750 + Math.random() * 450 // cleaner hits = higher force
-      : 350 + Math.random() * 500;
+      ? 2600 + Math.random() * 1400 // 2600-4000 — clean hits, hard and loud
+      : 1200 + Math.random() * 1700; // 1200-2900 — off-spot, softer
 
     onHit({
       x,

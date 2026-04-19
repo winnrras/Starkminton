@@ -50,20 +50,19 @@ export function createBluetoothClient(
       // Ignore pong responses
       if (parsed.pong) return;
 
-      // Validate
+      // Validate — x and y are required. force is optional (mic env hits don't include it).
       if (
         typeof parsed.x !== "number" ||
-        typeof parsed.y !== "number" ||
-        typeof parsed.force !== "number"
+        typeof parsed.y !== "number"
       ) {
-        console.warn("Invalid hit payload", parsed);
+        console.warn("Invalid hit payload — missing x/y", parsed);
         return;
       }
 
       callbacks.onHit({
         x: clamp(parsed.x, 0, 1),
         y: clamp(parsed.y, 0, 1),
-        force: parsed.force,
+        force: typeof parsed.force === "number" ? parsed.force : 0,
         sweet: typeof parsed.sweet === "boolean" ? parsed.sweet : null,
         deviceTimestamp: typeof parsed.t === "number" ? parsed.t : undefined,
       });
